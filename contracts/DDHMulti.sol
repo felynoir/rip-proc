@@ -58,7 +58,7 @@ contract DDHMulti is DDH {
             // Generate OTP keys
             uint256[] storage otpKeys = multiRef.otpKeys.push();
             for (uint256 i = 0; i < params.L; i++) {
-                otpKeys.push(sample(0, params.bound));
+                otpKeys.push(sample(0, 1));
             }
         }
 

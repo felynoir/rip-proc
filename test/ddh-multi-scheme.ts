@@ -7,7 +7,7 @@ import { dot } from "mathjs";
 describe("DDH-multi scheme", function () {
   async function deploy(aclName?: string) {
     const DDH = await ethers.getContractFactory("DDHMulti");
-    const ddhm = await DDH.deploy(2, 3, 2 ** 10);
+    const ddhm = await DDH.deploy(2, 10, 2 ** 10);
     await ddhm.waitForDeployment();
 
     return { ddhm, ddhmAddress: await ddhm.getAddress() };
@@ -17,14 +17,13 @@ describe("DDH-multi scheme", function () {
     const { ddhm } = await deploy();
 
     await (await ddhm.generateMultiMasterKeys()).wait();
-    // const masterPubKey = await ddhm..staticCallResult(0);
     const xs = [
-      [2, 3, 5],
-      [4, 5, 6],
+      [2, 3, 5, 6, 7, 8, 9, 10, 11, 12],
+      [4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
     ];
     const ys = [
-      [1, 1, 6],
-      [2, 2, 7],
+      [1, 1, 6, 7, 8, 9, 10, 11, 12, 13],
+      [2, 2, 7, 8, 9, 10, 11, 12, 13, 14],
     ];
 
     await (await ddhm.deriveMultiKey(0, ys)).wait();

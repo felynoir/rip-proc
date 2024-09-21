@@ -8,54 +8,10 @@ import {
   useWaitForTransactionReceipt,
   useWalletClient,
 } from "wagmi";
-import type { Abi } from "abitype";
 import { sapphireTestnet } from "wagmi/chains";
 import { Button } from "@/components/ui/button";
-
-/*
-// SPDX-License-Identifier: Apache-2.0
-pragma solidity >=0.8.2 <0.9.0;
-contract Storage {
-    uint256 number;
-    function store(uint256 num) public {
-        number = num;
-    }
-    function retrieve() public view returns (uint256){
-        return number;
-    }
-}
-*/
-const StorageBytecode =
-  "0x608060405234801561000f575f80fd5b506101438061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610034575f3560e01c80632e64cec1146100385780636057361d14610056575b5f80fd5b610040610072565b60405161004d919061009b565b60405180910390f35b610070600480360381019061006b91906100e2565b61007a565b005b5f8054905090565b805f8190555050565b5f819050919050565b61009581610083565b82525050565b5f6020820190506100ae5f83018461008c565b92915050565b5f80fd5b6100c181610083565b81146100cb575f80fd5b50565b5f813590506100dc816100b8565b92915050565b5f602082840312156100f7576100f66100b4565b5b5f610104848285016100ce565b9150509291505056fea26469706673582212201bc715d5ea5b4244a667a55f9fd36929a52a02208d9b458fdf543f5495011b2164736f6c63430008180033";
-
-const StorageABI = [
-  {
-    inputs: [],
-    name: "retrieve",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "num",
-        type: "uint256",
-      },
-    ],
-    name: "store",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as const satisfies Abi;
+import { LoadedInformation } from "@/components/LoadedInformation";
+import { DDHMultiABI } from "@/constant/abi";
 
 function DApp() {
   const account = useAccount();
@@ -68,7 +24,7 @@ function DApp() {
     undefined | `0x${string}`
   >();
   const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
-  const [readResult, setReadResult] = useState<bigint | undefined>();
+  // const [readResult, setReadResult] = useState<bigint | undefined>();
   const publicClient = usePublicClient()!;
 
   const { data: writeReceipt, error: writeTxError } =
@@ -82,10 +38,16 @@ function DApp() {
     if (contractAddress) {
       const callArgs = {
         account: account.address!,
-        abi: StorageABI,
+        abi: DDHMultiABI,
         address: contractAddress,
-        functionName: "store",
-        args: [BigInt(Math.round(Math.random() * 100000))],
+        functionName: "multiEncrypt",
+        args: [
+          0n,
+          [
+            [1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n],
+            [2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n],
+          ],
+        ],
       } as const;
       const result = await walletClient!.writeContract({
         ...callArgs,
@@ -99,14 +61,16 @@ function DApp() {
   async function doRead() {
     if (contractAddress) {
       const result = await publicClient.readContract({
-        abi: StorageABI,
+        abi: DDHMultiABI,
         address: contractAddress,
-        functionName: "retrieve",
-        args: [],
+        functionName: "getAllEncryptedText",
+        args: [0n],
       });
-      setReadResult(result);
+      console.log({ result });
     }
   }
+
+  return <LoadedInformation />;
 
   return (
     <>

@@ -10,6 +10,7 @@ import {
 } from "wagmi";
 import type { Abi } from "abitype";
 import { sapphireTestnet } from "wagmi/chains";
+import { Button } from "@/components/ui/button";
 
 /*
 // SPDX-License-Identifier: Apache-2.0
@@ -63,15 +64,12 @@ function DApp() {
   const { data: walletClient } = useWalletClient({
     chainId: sapphireTestnet.id,
   });
-  const [deployHash, setDeployHash] = useState<undefined | `0x${string}`>();
   const [contractAddress, setContractAddress] = useState<
     undefined | `0x${string}`
   >();
   const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
   const [readResult, setReadResult] = useState<bigint | undefined>();
   const publicClient = usePublicClient()!;
-  const { data: deployReceipt, error: deployTxError } =
-    useWaitForTransactionReceipt({ hash: deployHash, confirmations: 1 });
 
   const { data: writeReceipt, error: writeTxError } =
     useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
@@ -79,24 +77,6 @@ function DApp() {
   const { data: writeTxInfo } = useTransaction({
     hash: writeReceipt?.transactionHash,
   });
-
-  async function doDeploy() {
-    // const hash = await walletClient?.deployContract({
-    //   abi: StorageABI,
-    //   bytecode: StorageBytecode,
-    //   args: [],
-    // });
-    // if (hash) {
-    //   console.log("Deploy hash set to", hash);
-    //   setDeployHash(hash);
-    // }
-  }
-
-  useEffect(() => {
-    if (deployReceipt?.contractAddress) {
-      setContractAddress(deployReceipt.contractAddress);
-    }
-  }, [deployReceipt]);
 
   async function doWrite() {
     if (contractAddress) {
@@ -145,74 +125,6 @@ function DApp() {
           chainId: {account.chainId}
           {account.chain && <span>&nbsp;({account.chain?.name})</span>}
         </div>
-
-        <hr />
-
-        <button type="button" onClick={doDeploy}>
-          Deploy
-        </button>
-        {deployHash}
-        <br />
-        {deployTxError && (
-          <>
-            Deploy Error: {deployTxError?.message}
-            <br />
-          </>
-        )}
-        {deployReceipt && (
-          <>
-            Contract:{" "}
-            <span id="deployContractAddress">
-              {deployReceipt?.contractAddress}
-            </span>
-            <br />
-            <hr />
-            <button type="button" onClick={doWrite}>
-              Write
-            </button>
-            <br />
-            {writeTxHash && (
-              <>
-                Write Tx Hash: {writeTxHash}
-                <br />
-                {writeTxError && (
-                  <>
-                    Write Tx Error: {writeTxError.message}
-                    <br />
-                  </>
-                )}
-                {writeReceipt && (
-                  <>
-                    Write Tx Gas: {writeReceipt.gasUsed.toString()}
-                    <br />
-                    Write Tx BlockHash:&nbsp;
-                    <span id="writeReceiptBlockHash">
-                      {writeReceipt.blockHash}
-                    </span>
-                    <br />
-                    Write Tx Calldata:&nbsp;
-                    {writeTxInfo?.input}
-                    {/* <span id="isWriteEnveloped">
-                      {isCalldataEnveloped(writeTxInfo?.input)
-                        ? "encrypted"
-                        : "plaintext"}
-                    </span> */}
-                  </>
-                )}
-              </>
-            )}
-            <hr />
-            <button type="button" onClick={doRead}>
-              Read
-            </button>
-            {readResult !== undefined && (
-              <>
-                <span id="readResult">{readResult.toString()}</span>
-              </>
-            )}
-            <br />
-          </>
-        )}
         <hr />
 
         {account.status === "connected" && (
@@ -223,16 +135,16 @@ function DApp() {
       </div>
 
       <div>
-        <h2>Connect</h2>
+        <h2>Connect wallet</h2>
         {connectors.map((connector) => (
-          <button
+          <Button
             key={connector.uid}
             onClick={() => connect({ connector })}
             type="button"
             id={"connect-" + connector.id}
           >
             {connector.name}
-          </button>
+          </Button>
         ))}
         <div>{status}</div>
         <div>{error?.message}</div>

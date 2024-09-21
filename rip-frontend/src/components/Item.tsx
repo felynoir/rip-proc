@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 import {
   Card,
   CardContent,
@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 
 type CardProps = React.ComponentProps<typeof Card> & {
-  title: string,
+  title: string;
 };
 
 import { Link } from "react-router-dom";

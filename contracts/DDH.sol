@@ -31,7 +31,7 @@ contract DDH {
         uint256 Q; // Order of G
     }
 
-    DDHParams private params;
+    DDHParams params;
 
     uint256 private salt;
 

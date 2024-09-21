@@ -2,10 +2,10 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { modPow, modInv } from "bigint-mod-arith";
 
-const dot = (a: number[], b: number[]) =>
+export const dot = (a: number[], b: number[]) =>
   a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
 
-function bigintLog2Floor(n: bigint) {
+export function bigintLog2Floor(n: bigint) {
   if (n <= 0n) {
     throw new Error("Input must be a positive integer.");
   }
@@ -19,7 +19,7 @@ function bigintLog2Floor(n: bigint) {
   return log;
 }
 
-function sqrt(value: bigint) {
+export function sqrt(value: bigint) {
   if (value < 0n) {
     throw "square root of negative numbers is not supported";
   }
@@ -48,7 +48,7 @@ function sqrt(value: bigint) {
  * @param {bigint} p - The modulus (a prime number).
  * @return {bigint | null} - The exponent x, or null if no solution is found.
  */
-function babyStepGiantStep(
+export function babyStepGiantStep(
   g: bigint,
   h: bigint,
   p: bigint,
@@ -112,7 +112,7 @@ describe("DDH scheme", function () {
     const { ddh } = await deploy();
 
     await (await ddh.generateMasterKeys()).wait();
-    const masterPubKey = await ddh.getMasterPubKey.staticCallResult(0);
+    await ddh.getMasterPubKey.staticCallResult(0);
     const xs = [2, 3, 5];
     const ys = [1, 1, 6];
 
@@ -134,7 +134,7 @@ describe("DDH scheme", function () {
     const denomInv = modInv(denom, P);
     const r = (num * denomInv) % P;
 
-    const bound = 1n * (2n ** 10n) ** 2n;
+    const bound = 3n * (2n ** 10n) ** 2n;
     const bb = sqrt(bound) + 1n;
     const result = babyStepGiantStep(G, r, P, bb);
     if (result === null) {

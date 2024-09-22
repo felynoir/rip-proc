@@ -16,7 +16,7 @@ function Dashboard() {
   const { ciphers, fKeys } = useDecryption();
   console.log("ciphers", ciphers);
   console.log("fKeys", fKeys);
-  const attestable = ciphers.length > 0 && fKeys.length > 0;
+  const attestable = ciphers && fKeys && ciphers.length > 0 && fKeys.length > 0;
   return (
     <>
       <div className="flex gap-6 w-3/5 m-10">

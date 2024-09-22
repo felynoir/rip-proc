@@ -106,7 +106,7 @@ export const useDecryption = (initialRefId = 0n) => {
   });
 
   const { data: ciphers } = useQuery({
-    queryKey: ["ciphers", refId],
+    queryKey: ["ciphers", refId.toString()],
     queryFn: async () => {
       const result = await publicClient.readContract({
         abi: DDHMultiABI,
@@ -119,7 +119,7 @@ export const useDecryption = (initialRefId = 0n) => {
   });
 
   const { data: fKeys } = useQuery({
-    queryKey: ["fKeys", refId],
+    queryKey: ["fKeys", refId.toString()],
     queryFn: async () => {
       const result = await publicClient.readContract({
         abi: DDHMultiABI,
@@ -132,6 +132,9 @@ export const useDecryption = (initialRefId = 0n) => {
   });
 
   const precalculatedResult = useMemo(() => {
+    if (!ciphers || !fKeys) return;
+    if (ciphers.length !== 2) return;
+    if (fKeys.length !== 2) return;
     let results: bigint[] = [];
 
     for (let slot = 0; slot < 2; slot++) {

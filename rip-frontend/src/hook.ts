@@ -106,14 +106,14 @@ export const useDecryption = (initialRefId = 0n) => {
 
   const precalculatedResult = useMemo(() => {
     if (!ciphers || !fKeys) return;
-    if (ciphers.length !== 2) return;
-    if (fKeys.length !== 2) return;
+    if (ciphers.length > 0) return;
+    if (fKeys.length > 0) return;
     let results: bigint[] = [];
 
     for (let slot = 0; slot < 2; slot++) {
       let num = 1n;
       for (let i = 1; i < ciphers[slot].length; i++) {
-        const t1 = modPow(ciphers[slot][i], BigInt(ys[slot][i - 1]), P);
+        const t1 = modPow(ciphers[slot][i], ys[slot][i - 1], P);
         num = (num * t1) % P;
       }
       const denom = modPow(ciphers[slot][0], fKeys[slot], P);

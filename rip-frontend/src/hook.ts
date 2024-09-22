@@ -23,7 +23,7 @@ const ys = [
   [3n, 5n, 5n, 10n, 1n, 2n, 3n, 4n, 5n, 6n],
   [4n, 6n, 2n, 3n, 6n, 11n, 7n, 8n, 9n, 10n],
 ];
-export const ddhm = "0x97f4C40e9C90254246346559a270455292F0C77F";
+export const ddhm = "0x6ecbD564E77BFbb88e6e28Cd64DF0a334efd990e";
 
 export const useMultiEncryption = () => {
   const account = useAccount();

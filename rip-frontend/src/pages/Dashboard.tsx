@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useDecryption } from "@/components/LoadedInformation";
 import { Link } from "react-router-dom";
+import { useDecryption } from "@/hook";
 
 function Dashboard() {
   const { ciphers, fKeys } = useDecryption();
@@ -26,7 +26,7 @@ function Dashboard() {
               "w-[380px]",
               "transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:bg-gray-50 transition-color hover:cursor-pointer"
             )}
-            onClick={() => alert("clicked")}
+            onClick={() => alert("Loading your DNA 👀 Please wait...")}
           >
             <CardHeader>
               <CardTitle>Legacy of John</CardTitle>

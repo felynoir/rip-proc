@@ -33,6 +33,7 @@ import { modInv, modPow } from "bigint-mod-arith";
 import { babyStepGiantStep, sqrt } from "@/lib/math";
 import { useQuery } from "@tanstack/react-query";
 import { RpcRequestError } from "viem";
+import { useDecryption, useInformation, useMultiEncryption } from "@/hook";
 
 enum STATUS {
   REVIEW,
@@ -40,163 +41,12 @@ enum STATUS {
   FINISH,
 }
 
-// precompile constants
-const P = 303951732001538966662735198097427004967n;
-const G = 139782000973099010998056607764611120709n;
-
-const x1 = [1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n]; // this should be kept as a secret
-const x2 = [2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n]; // this too.
-const ys = [
-  [3n, 5n, 5n, 10n, 1n, 2n, 3n, 4n, 5n, 6n],
-  [4n, 6n, 2n, 3n, 6n, 11n, 7n, 8n, 9n, 10n],
-];
-export const ddhm = "0x97f4C40e9C90254246346559a270455292F0C77F";
-
-export const useMultiEncryption = () => {
-  const account = useAccount();
-  const { data: walletClient } = useWalletClient({
-    chainId: sapphireTestnet.id,
-  });
-  const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
-  const publicClient = usePublicClient()!;
-
-  const { data: writeReceipt, error: writeTxError } =
-    useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
-
-  const { data: writeTxInfo } = useTransaction({
-    hash: writeReceipt?.transactionHash,
-  });
-
-  async function doWrite() {
-    if (!account.address) return;
-    if (ddhm) {
-      const callArgs = {
-        account: account.address!,
-        abi: DDHMultiABI,
-        address: ddhm,
-        functionName: "multiEncrypt",
-        args: [0n, [x1, x2]],
-      } as const;
-      const result = await walletClient!.writeContract({
-        ...callArgs,
-        chain: sapphireTestnet,
-        gas: await publicClient.estimateContractGas(callArgs),
-      });
-      setWriteTxHash(result);
-    }
-  }
-
-  return { writeTxInfo, doWrite, writeTxError };
-};
-
-export const useDecryption = (initialRefId = 0n) => {
-  const [refId, setRefId] = useState(initialRefId);
-  const account = useAccount();
-  const { data: walletClient } = useWalletClient({
-    chainId: sapphireTestnet.id,
-  });
-  const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
-  const publicClient = usePublicClient()!;
-
-  const { data: writeReceipt, error: writeTxError } =
-    useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
-
-  const { data: writeTxInfo } = useTransaction({
-    hash: writeReceipt?.transactionHash,
-  });
-
-  const { data: ciphers } = useQuery({
-    queryKey: ["ciphers", refId.toString()],
-    queryFn: async () => {
-      const result = await publicClient.readContract({
-        abi: DDHMultiABI,
-        address: ddhm,
-        functionName: "getAllEncryptedText",
-        args: [refId],
-      });
-      return result;
-    },
-  });
-
-  const { data: fKeys } = useQuery({
-    queryKey: ["fKeys", refId.toString()],
-    queryFn: async () => {
-      const result = await publicClient.readContract({
-        abi: DDHMultiABI,
-        address: ddhm,
-        functionName: "getAllFunctionKeys",
-        args: [refId],
-      });
-      return result;
-    },
-  });
-
-  const precalculatedResult = useMemo(() => {
-    if (!ciphers || !fKeys) return;
-    if (ciphers.length !== 2) return;
-    if (fKeys.length !== 2) return;
-    let results: bigint[] = [];
-
-    for (let slot = 0; slot < 2; slot++) {
-      let num = 1n;
-      for (let i = 1; i < ciphers[slot].length; i++) {
-        const t1 = modPow(ciphers[slot][i], BigInt(ys[slot][i - 1]), P);
-        num = (num * t1) % P;
-      }
-      const denom = modPow(ciphers[slot][0], fKeys[slot], P);
-      const denomInv = modInv(denom, P);
-      const r = (num * denomInv) % P;
-      const bound = 3n * (2n ** 10n) ** 2n;
-      const bb = sqrt(bound) + 1n;
-      const result = babyStepGiantStep(G, r, P, bb);
-      if (result === null) {
-        throw new Error("Failed to find the discrete logarithm within bound");
-      }
-      results.push(result);
-    }
-    return results;
-  }, [ciphers, fKeys]);
-
-  async function doWrite() {
-    if (!account.address) return;
-    if (ddhm) {
-      const callArgs = {
-        account: account.address!,
-        abi: DDHMultiABI,
-        address: ddhm,
-        functionName: "multiDecrypt",
-        args: [refId, precalculatedResult],
-      } as const;
-      const result = await walletClient!.writeContract({
-        ...callArgs,
-        chain: sapphireTestnet,
-        gas: await publicClient.estimateContractGas(callArgs),
-      });
-      setWriteTxHash(result);
-    }
-  }
-
-  return { writeTxInfo, doWrite, writeTxError, setRefId, ciphers, fKeys };
-};
-
-const useInformation = () => {
-  const [name, setName] = useState("John Doe");
-  const [dna, setDna] = useState([9n, 10n, 11n, 12n, 13n, 14n, 1n, 2n, 3n, 4n]);
-  const [verificationResult, setVerificationResult] = useState("Verified");
-
-  return {
-    name,
-    dna,
-    verificationResult,
-  };
-};
-
 export function LoadedInformation() {
   const [state, setState] = useState(STATUS.REVIEW);
   const [option, setOption] = useState("");
-  const { name, dna, verificationResult } = useInformation();
+  const { name, verificationResult, attestable } = useInformation();
 
-  // const { writeTxInfo, doWrite, writeTxError, setRefId } = useDecryption();
+  const { writeTxInfo: decrypTxInfo, doWrite: doDecryption } = useDecryption();
   const {
     writeTxInfo: multiWriteTxInfo,
     writeTxError,
@@ -207,10 +57,19 @@ export function LoadedInformation() {
     console.log("onSubmit");
     doMultiEncryption();
   };
+  const onAttestation = () => {
+    console.log("onAttestation");
+    doDecryption();
+  };
 
-  console.log("multiWriteTxInfo", multiWriteTxInfo);
   useEffect(() => {
-    if (multiWriteTxInfo?.status === "success") {
+    if (decrypTxInfo) {
+      setState(STATUS.FINISH);
+    }
+  }, [decrypTxInfo?.status, multiWriteTxInfo?.status]);
+
+  useEffect(() => {
+    if (multiWriteTxInfo) {
       setState(STATUS.FINISH);
     }
   }, [multiWriteTxInfo?.status]);
@@ -289,6 +148,10 @@ export function LoadedInformation() {
         )}
         <Button
           onClick={() => {
+            if (attestable) {
+              onAttestation();
+              return;
+            }
             if (state === STATUS.REVIEW) {
               setState(STATUS.SELECT_FUNCTION);
             } else if (state === STATUS.SELECT_FUNCTION) {
@@ -297,7 +160,7 @@ export function LoadedInformation() {
             }
           }}
         >
-          {state === STATUS.REVIEW ? "Next" : "Submit"}
+          {state === STATUS.REVIEW && !attestable ? "Next" : "Submit"}
         </Button>
       </CardFooter>
     </Card>

@@ -11,8 +11,8 @@ async function main() {
   await tx.wait();
   console.log("Generated master keys", tx.hash);
   const ys = [
-    [3, 5, 5, 10, 1, 2, 3, 4, 5, 6],
-    [4, 6, 2, 3, 6, 11, 7, 8, 9, 10],
+    [3n, 5n, 5n, 10n, 1n, 2n, 3n, 4n, 5n, 6n],
+    [4n, 6n, 2n, 3n, 6n, 11n, 7n, 8n, 9n, 10n],
   ];
   const tx2 = await ddhm.deriveMultiKey(0, ys);
   await tx2.wait();

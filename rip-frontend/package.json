@@ -21,6 +21,7 @@
     "@radix-ui/react-switch": "^1.1.0",
     "@tanstack/react-query": "^5.56.2",
     "abitype": "^1.0.6",
+    "bigint-mod-arith": "^3.3.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "ethers": "5.7.0",

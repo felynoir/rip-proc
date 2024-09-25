@@ -1,17 +1,6 @@
-import { useEffect, useState } from "react";
-import {
-  useAccount,
-  useConnect,
-  useDisconnect,
-  usePublicClient,
-  useTransaction,
-  useWaitForTransactionReceipt,
-  useWalletClient,
-} from "wagmi";
-import { sapphireTestnet } from "wagmi/chains";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { LoadedInformation } from "@/components/LoadedInformation";
-import { DDHMultiABI } from "@/constant/abi";
 
 function DApp() {
   const account = useAccount();

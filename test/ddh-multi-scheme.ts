@@ -27,6 +27,10 @@ describe("DDH-multi scheme", function () {
     ];
 
     await (await ddhm.deriveMultiKey(0, ys)).wait();
+
+    const [ers] = await ddhm.getAllEncryptedText.staticCallResult(0);
+    console.log(ers);
+
     await (await ddhm.multiEncrypt(0, xs)).wait();
 
     const [ciphers] = await ddhm.getAllEncryptedText.staticCallResult(0);

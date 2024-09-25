@@ -23,7 +23,7 @@ const ys = [
   [3n, 5n, 5n, 10n, 1n, 2n, 3n, 4n, 5n, 6n],
   [4n, 6n, 2n, 3n, 6n, 11n, 7n, 8n, 9n, 10n],
 ];
-export const ddhm = "0x6ecbD564E77BFbb88e6e28Cd64DF0a334efd990e";
+export const ddhm = "0x1687812676F4a8B43aD59Bc5793754f8a07A2428";
 
 export const useMultiEncryption = () => {
   const account = useAccount();
@@ -33,8 +33,12 @@ export const useMultiEncryption = () => {
   const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
   const publicClient = usePublicClient()!;
 
-  const { data: writeReceipt, error: writeTxError } =
-    useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
+  const {
+    data: writeReceipt,
+    isLoading,
+    isSuccess,
+    error: writeTxError,
+  } = useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
 
   const { data: writeTxInfo } = useTransaction({
     hash: writeReceipt?.transactionHash,
@@ -59,7 +63,13 @@ export const useMultiEncryption = () => {
     }
   }
 
-  return { writeTxInfo, doWrite, writeTxError };
+  return {
+    isLoading,
+    writeTxInfo,
+    doWrite,
+    writeTxError,
+    isSuccess,
+  };
 };
 
 export const useDecryption = (initialRefId = 0n) => {
@@ -71,8 +81,12 @@ export const useDecryption = (initialRefId = 0n) => {
   const [writeTxHash, setWriteTxHash] = useState<undefined | `0x${string}`>();
   const publicClient = usePublicClient()!;
 
-  const { data: writeReceipt, error: writeTxError } =
-    useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
+  const {
+    data: writeReceipt,
+    error: writeTxError,
+    isLoading,
+    isSuccess,
+  } = useWaitForTransactionReceipt({ hash: writeTxHash, confirmations: 1 });
 
   const { data: writeTxInfo } = useTransaction({
     hash: writeReceipt?.transactionHash,
@@ -105,9 +119,16 @@ export const useDecryption = (initialRefId = 0n) => {
   });
 
   const precalculatedResult = useMemo(() => {
-    if (!ciphers || !fKeys) return;
-    if (ciphers.length > 0) return;
-    if (fKeys.length > 0) return;
+    if (
+      !(
+        ciphers &&
+        fKeys &&
+        ciphers.filter((c) => c.length > 0).length == ciphers.length &&
+        fKeys.length > 0
+      )
+    ) {
+      return;
+    }
     let results: bigint[] = [];
 
     for (let slot = 0; slot < 2; slot++) {
@@ -131,7 +152,10 @@ export const useDecryption = (initialRefId = 0n) => {
   }, [ciphers, fKeys]);
 
   async function doWrite() {
+    console.log({ ciphers, fKeys });
+    console.log("precalculatedResult", precalculatedResult);
     if (!account.address) return;
+    if (!precalculatedResult || precalculatedResult.length === 0) return;
     if (ddhm) {
       const callArgs = {
         account: account.address!,
@@ -149,18 +173,35 @@ export const useDecryption = (initialRefId = 0n) => {
     }
   }
 
-  return { writeTxInfo, doWrite, writeTxError, setRefId, ciphers, fKeys };
+  return {
+    writeTxInfo,
+    isLoading,
+    doWrite,
+    writeTxError,
+    setRefId,
+    ciphers,
+    fKeys,
+    isSuccess,
+  };
 };
 
 export const useInformation = () => {
   const { ciphers, fKeys } = useDecryption();
-  const attestable = ciphers && fKeys && ciphers.length > 0 && fKeys.length > 0;
+  const attestable =
+    ciphers &&
+    fKeys &&
+    ciphers.filter((c) => c.length > 0).length == ciphers.length &&
+    fKeys.length > 0;
+
+  console.log(attestable, ciphers, fKeys);
 
   const [verificationResult, setVerificationResult] = useState("Verified");
 
   return {
     name: attestable ? "Dolly Doe" : "John Doe",
-    verificationResult,
+    verificationResult: attestable
+      ? "Verified from hospital B"
+      : "Verified from hospital A",
     attestable,
   };
 };

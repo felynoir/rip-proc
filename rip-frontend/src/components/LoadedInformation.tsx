@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useHref, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -19,20 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import {
-  useAccount,
-  useConnect,
-  usePublicClient,
-  useTransaction,
-  useWaitForTransactionReceipt,
-  useWalletClient,
-} from "wagmi";
-import { sapphireTestnet } from "viem/chains";
-import { DDHMultiABI } from "@/constant/abi";
-import { modInv, modPow } from "bigint-mod-arith";
-import { babyStepGiantStep, sqrt } from "@/lib/math";
-import { useQuery } from "@tanstack/react-query";
-import { RpcRequestError } from "viem";
 import { useDecryption, useInformation, useMultiEncryption } from "@/hook";
 
 enum STATUS {
@@ -46,19 +31,34 @@ export function LoadedInformation() {
   const [option, setOption] = useState("");
   const { name, verificationResult, attestable } = useInformation();
 
-  const { writeTxInfo: decrypTxInfo, doWrite: doDecryption } = useDecryption();
+  const {
+    writeTxInfo: decrypTxInfo,
+    doWrite: doDecryption,
+    isLoading: isDecryptionLoading,
+    isSuccess: isDecryptionSuccess,
+  } = useDecryption();
   const {
     writeTxInfo: multiWriteTxInfo,
     writeTxError,
     doWrite: doMultiEncryption,
+    isSuccess: isEncryptionSuccess,
+    isLoading: isEncryptionLoading,
   } = useMultiEncryption();
+
+  const isPending = isDecryptionLoading || isEncryptionLoading;
+
+  console.log({ isDecryptionSuccess, isEncryptionSuccess });
 
   const onSubmit = () => {
     console.log("onSubmit");
+    alert("Generating function key for matching DNA might take a while 😴");
     doMultiEncryption();
   };
   const onAttestation = () => {
     console.log("onAttestation");
+    alert(
+      "Submitting your encrypted DNA and running matching DNA algorithm might take a while 😴"
+    );
     doDecryption();
   };
 
@@ -74,6 +74,20 @@ export function LoadedInformation() {
     }
   }, [multiWriteTxInfo?.status]);
 
+  useEffect(() => {
+    if (isDecryptionSuccess) {
+      alert("Congratulations! John's will is now fullfilled 🎉");
+      navigate("/");
+    }
+  }, [isDecryptionSuccess]);
+
+  useEffect(() => {
+    if (isEncryptionSuccess) {
+      alert("Successfully publish your encrypted DNA 🎉");
+      navigate("/");
+    }
+  }, [isEncryptionSuccess]);
+
   const navigate = useNavigate();
 
   if (writeTxError) {
@@ -86,7 +100,8 @@ export function LoadedInformation() {
       <CardHeader>
         <CardTitle>
           {state === STATUS.REVIEW && "Review"}
-          {state === STATUS.SELECT_FUNCTION && "Select Function"}
+          {state === STATUS.SELECT_FUNCTION &&
+            "What's your will criteria? (your data won't be use for other purpose)"}
           {state === STATUS.FINISH &&
             "Condition Matched 🎉 Submission Completed"}
         </CardTitle>
@@ -118,7 +133,12 @@ export function LoadedInformation() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent position="popper">
-                  <SelectItem value="0">Compare Similarity of DNA</SelectItem>
+                  <SelectItem value="0">
+                    Inner Product (DNA Similarity){" "}
+                  </SelectItem>
+                  <SelectItem value="1">
+                    Kinssip coefficient (Common genetic inheritance pattern){" "}
+                  </SelectItem>
                   {/* <SelectItem value="none">None</SelectItem> */}
                 </SelectContent>
               </Select>
@@ -131,7 +151,7 @@ export function LoadedInformation() {
             <Button
               variant="outline"
               onClick={() => {
-                navigate("/dashboard");
+                navigate("/");
               }}
             >
               Back
@@ -160,7 +180,11 @@ export function LoadedInformation() {
             }
           }}
         >
-          {state === STATUS.REVIEW && !attestable ? "Next" : "Submit"}
+          {isPending
+            ? "Loading"
+            : state === STATUS.REVIEW && !attestable
+            ? "Next"
+            : "Submit"}
         </Button>
       </CardFooter>
     </Card>

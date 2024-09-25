@@ -3,3 +3,4 @@ cache/
 .lib/*
 node_modules/
 typechain-types/
+.vercel
